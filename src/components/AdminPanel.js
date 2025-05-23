@@ -9,7 +9,12 @@ export default function AdminPanel({ onLogout }) {
   const [motoboys, setMotoboys] = useState({});
   const [showMotoboysManager, setShowMotoboysManager] = useState(false);
   const [showRelatorios, setShowRelatorios] = useState(false);
-
+export default function AdminPanel({ onLogout, painelNome = "Painel Admin – Osasco Express" }) {
+  // ...
+  // onde aparece o nome do painel, use {painelNome}
+  <span style={{ color: "#fff", fontWeight: 700 }}>{painelNome}</span><br />
+  // ...
+}
   const hoje = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: '2-digit',
