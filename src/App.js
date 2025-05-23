@@ -16,7 +16,7 @@ function App() {
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         height: "100vh", fontFamily: "Nunito, Arial, sans-serif", background: "#000"
       }}>
-        <img src="/logo_osasco_express.png" alt="Logo Osasco Express" style={{ width: 100, marginBottom: 30 }} />
+        <img src="/logo.png" alt="Logo Osasco Express" style={{ width: 100, marginBottom: 30 }} />
         <h1 style={{ color: "#ffc300", marginBottom: 50, fontWeight: 900, fontSize: 30, textAlign: "center" }}>
           Sistema de Rodízio<br />Osasco Express
         </h1>

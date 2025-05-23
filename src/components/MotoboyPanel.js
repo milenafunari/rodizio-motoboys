@@ -47,7 +47,7 @@ export default function MotoboyPanel() {
       minHeight: "100vh", background: "#000", display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center", fontFamily: "Nunito, Arial, sans-serif"
     }}>
-      <img src="/logo_osasco_express.png" alt="Logo" style={{ width: 90, marginBottom: 20 }} />
+      <img src="/logo.png" alt="Logo" style={{ width: 90, marginBottom: 20 }} />
       <div style={{
         background: "#1a1a1a", borderRadius: 20, padding: "34px 32px", boxShadow: "0 6px 36px #0005",
         width: 360, maxWidth: "96%"
