@@ -2,19 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
 import { ref, set, onValue } from 'firebase/database';
 import MotoboysManager from './MotoboysManager';
-import Relatorios from './Relatorios'; // novo componente de relatório
+import Relatorios from './Relatorios';
 
-export default function AdminPanel({ onLogout }) {
+export default function AdminPanel({ onLogout, painelNome = "Painel Admin – Osasco Express" }) {
   const [queue, setQueue] = useState([]);
   const [motoboys, setMotoboys] = useState({});
   const [showMotoboysManager, setShowMotoboysManager] = useState(false);
   const [showRelatorios, setShowRelatorios] = useState(false);
-export default function AdminPanel({ onLogout, painelNome = "Painel Admin – Osasco Express" }) {
-  // ...
-  // onde aparece o nome do painel, use {painelNome}
-  <span style={{ color: "#fff", fontWeight: 700 }}>{painelNome}</span><br />
-  // ...
-}
+
   const hoje = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: '2-digit',
@@ -44,7 +39,7 @@ export default function AdminPanel({ onLogout, painelNome = "Painel Admin – Os
   // Resetar fila
   const resetQueue = () => set(ref(db, 'queue'), []);
 
-  // Mover para o topo da fila (nova função)
+  // Mover para o topo da fila
   const moveToTop = (idx) => {
     const updated = [...queue];
     const [motoboy] = updated.splice(idx, 1);
@@ -96,7 +91,7 @@ export default function AdminPanel({ onLogout, painelNome = "Painel Admin – Os
           </div>
         </div>
         <div style={{ color: "#bbb", fontSize: 17, marginBottom: 18 }}>
-          <span style={{ color: "#fff", fontWeight: 700 }}>Painel Admin – Osasco Express</span><br />
+          <span style={{ color: "#fff", fontWeight: 700 }}>{painelNome}</span><br />
           <span>Data: {hoje}</span>
         </div>
 
