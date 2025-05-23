@@ -65,7 +65,7 @@ export default function AdminPanel({ onLogout }) {
         maxWidth: 530, width: "97%", margin: "0 auto", fontFamily: "Nunito, Arial, sans-serif"
       }}>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 24, justifyContent: "space-between" }}>
-          <img src="/logo_osasco_express.png" alt="Logo Osasco Express" style={{ width: 90, marginRight: 22 }} />
+          <img src="/logo.png" alt="Logo Osasco Express" style={{ width: 90, marginRight: 22 }} />
           <div>
             <button
               style={{
