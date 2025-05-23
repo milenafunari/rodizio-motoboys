@@ -37,7 +37,6 @@ export default function AdminPanel({ onLogout }) {
     do {
       novoCodigo = gerarCodigo();
       tentativas++;
-      // Checa se já existe alguém com o código gerado
     } while (motoboys[novoCodigo] && tentativas < 20);
     set(ref(db, `motoboys/${novoCodigo}`), { nome: name, codigo: novoCodigo });
     setName('');
@@ -69,24 +68,27 @@ export default function AdminPanel({ onLogout }) {
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#faf6f4", display: "flex", flexDirection: "column",
+      minHeight: "100vh", background: "#000", display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "start", paddingTop: 48
     }}>
       <div style={{
-        background: "#fff", borderRadius: 20, padding: "38px 32px", boxShadow: "0 6px 36px #0002",
+        background: "#1a1a1a", borderRadius: 20, padding: "38px 32px", boxShadow: "0 6px 36px #0005",
         maxWidth: 530, width: "97%", margin: "0 auto", fontFamily: "Nunito, Arial, sans-serif"
       }}>
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 16, justifyContent: "space-between" }}>
-          <span style={{ fontSize: 29, color: "#d86718", fontWeight: 900 }}>Painel do Admin</span>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 24, justifyContent: "space-between" }}>
+          <img src="/logo_osasco_express.png" alt="Logo Osasco Express" style={{ width: 90, marginRight: 22 }} />
           <button
             style={{
-              background: "#fff", color: "#d86718", border: "2px solid #d86718", borderRadius: 8,
+              background: "#fff", color: "#000", border: "2px solid #fff", borderRadius: 8,
               fontWeight: 700, padding: "10px 20px", fontSize: 17, cursor: "pointer"
             }}
             onClick={onLogout}
           >Sair</button>
         </div>
-        <div style={{ color: "#999", fontSize: 16, marginBottom: 16 }}>Data: {hoje}</div>
+        <div style={{ color: "#bbb", fontSize: 17, marginBottom: 18 }}>
+          <span style={{ color: "#fff", fontWeight: 700 }}>Painel Admin – Osasco Express</span><br />
+          <span>Data: {hoje}</span>
+        </div>
 
         <div style={{ marginBottom: 24, display: "flex", gap: 10 }}>
           <input
@@ -94,48 +96,49 @@ export default function AdminPanel({ onLogout }) {
             value={name}
             onChange={e => setName(e.target.value)}
             style={{
-              flex: 1, padding: "12px 10px", borderRadius: 7, border: "1.5px solid #d86718", fontSize: 16
+              flex: 1, padding: "12px 10px", borderRadius: 7, border: "1.5px solid #fff", fontSize: 16,
+              background: "#222", color: "#fff"
             }}
           />
           <button
             onClick={addMotoboy}
             style={{
-              background: "#d86718", color: "#fff", border: "none", borderRadius: 7,
+              background: "#fff", color: "#000", border: "none", borderRadius: 7,
               fontWeight: 700, padding: "12px 18px", fontSize: 17, cursor: "pointer"
             }}
           >Cadastrar</button>
         </div>
 
-        <h3 style={{ color: "#222", margin: "18px 0 4px", fontSize: 20, fontWeight: 900 }}>Motoboys Cadastrados:</h3>
+        <h3 style={{ color: "#fff", margin: "18px 0 4px", fontSize: 20, fontWeight: 900 }}>Motoboys Cadastrados:</h3>
         <ul style={{ margin: 0, paddingLeft: 18 }}>
-          {Object.values(motoboys).length === 0 && <li style={{ color: "#d86718" }}>Nenhum motoboy cadastrado.</li>}
+          {Object.values(motoboys).length === 0 && <li style={{ color: "#ffc300" }}>Nenhum motoboy cadastrado.</li>}
           {Object.values(motoboys).map((m, i) => (
-            <li key={i} style={{ marginBottom: 6 }}>
-              {m.nome} | <b>{m.codigo}</b>
+            <li key={i} style={{ marginBottom: 6, color: "#fff" }}>
+              {m.nome} | <b style={{ color: "#ffc300" }}>{m.codigo}</b>
               <button
                 onClick={() => addMotoboyToQueue(m.codigo)}
                 style={{
-                  marginLeft: 12, background: "#fff", color: "#d86718", border: "1.5px solid #d86718",
+                  marginLeft: 12, background: "#fff", color: "#000", border: "1.5px solid #fff",
                   borderRadius: 7, fontWeight: 700, padding: "6px 13px", fontSize: 15, cursor: "pointer"
                 }}
               >Adicionar à Fila</button>
             </li>
           ))}
         </ul>
-        <hr style={{ margin: "28px 0 18px" }} />
-        <h2 style={{ color: "#d86718", margin: "0 0 12px", fontWeight: 900 }}>Fila Atual</h2>
+        <hr style={{ margin: "28px 0 18px", borderColor: "#333" }} />
+        <h2 style={{ color: "#ffc300", margin: "0 0 12px", fontWeight: 900 }}>Fila Atual</h2>
         <ol style={{ fontSize: 19, marginLeft: 8, marginBottom: 16 }}>
-          {queue.length === 0 && <li style={{ color: "#d86718" }}>Fila vazia.</li>}
+          {queue.length === 0 && <li style={{ color: "#ffc300" }}>Fila vazia.</li>}
           {queue.map((q, idx) => {
             const m = motoboys[q.codigo];
             return (
-              <li key={idx} style={{ marginBottom: 7 }}>
+              <li key={idx} style={{ marginBottom: 7, color: "#fff" }}>
                 {m ? m.nome : q.codigo}
                 <span style={{ color: "#888", marginLeft: 7 }}>({q.codigo})</span>
                 <button
                   onClick={() => moveToEnd(idx)}
                   style={{
-                    marginLeft: 12, background: "#ffe1cd", color: "#d86718", border: "none",
+                    marginLeft: 12, background: "#ffc300", color: "#000", border: "none",
                     borderRadius: 7, fontWeight: 700, padding: "5px 13px", fontSize: 15, cursor: "pointer"
                   }}
                 >Mover para final</button>
@@ -153,7 +156,7 @@ export default function AdminPanel({ onLogout }) {
         <button
           onClick={resetQueue}
           style={{
-            background: "#fff", color: "#d86718", border: "2px solid #d86718", borderRadius: 8,
+            background: "#fff", color: "#000", border: "2px solid #fff", borderRadius: 8,
             fontWeight: 700, padding: "11px 0", fontSize: 17, width: "100%", marginTop: 18, cursor: "pointer"
           }}
         >Resetar Fila</button>
