@@ -1,117 +1,129 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { ref, onValue } from 'firebase/database';
+import { ref, onValue, set, remove, push } from 'firebase/database';
 
 export default function MotoboyPanel() {
   const [codigo, setCodigo] = useState('');
-  const [acesso, setAcesso] = useState(false);
+  const [motoboy, setMotoboy] = useState(null);
   const [queue, setQueue] = useState([]);
-  const [motoboys, setMotoboys] = useState({});
-  const hoje = new Date().toLocaleDateString('pt-BR', {
-    weekday: 'long',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState('');
 
+  // Busca lista de motoboys e fila
   useEffect(() => {
-    onValue(ref(db, 'queue'), (snapshot) => setQueue(snapshot.val() || []));
-    onValue(ref(db, 'motoboys'), (snapshot) => setMotoboys(snapshot.val() || {}));
-  }, []);
+    onValue(ref(db, 'motoboys'), snap => setMotoboy(snap.val() && snap.val()[codigo] ? snap.val()[codigo] : null));
+    onValue(ref(db, 'queue'), snap => setQueue(snap.val() || []));
+  }, [codigo]);
 
-  if (!acesso) {
-    return (
-      <div style={{
-        minHeight: "100vh", background: "#faf6f4", display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center"
-      }}>
-        <div style={{
-          background: "#fff", borderRadius: 16, padding: 40, boxShadow: "0 6px 36px #0001",
-          maxWidth: 370, width: "90%", textAlign: "center"
-        }}>
-          <img src="https://i.imgur.com/lh2QhRs.png" alt="Logo" style={{ width: 80, marginBottom: 18 }} />
-          <h2 style={{ color: "#d86718", fontWeight: 900 }}>Acesso Motoboy</h2>
-          <p style={{ color: "#888", fontSize: 16 }}>Informe seu código de acesso para visualizar sua posição na fila.</p>
-          <input
-            placeholder="Digite seu código"
-            value={codigo}
-            onChange={e => setCodigo(e.target.value.toUpperCase())}
-            style={{
-              padding: "12px 20px", fontSize: 18, borderRadius: 8, border: "1.5px solid #d86718",
-              outline: "none", marginTop: 16, width: "100%", textAlign: "center"
-            }}
-          />
-          <button
-            onClick={() => setAcesso(true)}
-            style={{
-              marginTop: 20, width: "100%", background: "#d86718", color: "#fff",
-              border: "none", borderRadius: 8, fontWeight: 700, padding: "14px 0",
-              fontSize: 18, boxShadow: "0 2px 12px #d8671822", cursor: "pointer"
-            }}
-          >Entrar</button>
-        </div>
-      </div>
-    );
-  }
+  // Helper: está na fila?
+  const estaNaFila = queue.find(m => m.codigo === codigo);
 
-  // Descobre nome do motoboy pelo código
-  const meuNome = motoboys[codigo]?.nome;
-  const estaNaFila = queue.some(q => q.codigo === codigo);
+  // "Cheguei"
+  const handleCheguei = async () => {
+    if (!motoboy) { setMsg("Código não encontrado."); return; }
+    if (estaNaFila) { setMsg("Você já está na fila!"); return; }
+    setLoading(true);
+    set(ref(db, 'queue'), [...queue, { codigo }]);
+    // Salva no histórico de entradas
+    push(ref(db, `entradas/${codigo}`), { data: new Date().toISOString() });
+    setMsg("Você entrou na fila.");
+    setLoading(false);
+  };
+
+  // "Sair para entrega"
+  const handleSaiu = async () => {
+    if (!estaNaFila) { setMsg("Você não está na fila."); return; }
+    setLoading(true);
+    const updated = queue.filter(q => q.codigo !== codigo);
+    set(ref(db, 'queue'), updated);
+    // Salva no histórico de saídas
+    push(ref(db, `saidas/${codigo}`), { data: new Date().toISOString() });
+    setMsg("Você saiu da fila. Boa entrega!");
+    setLoading(false);
+  };
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#faf6f4", display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "start", paddingTop: 54
+      minHeight: "100vh", background: "#000", display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center", fontFamily: "Nunito, Arial, sans-serif"
     }}>
+      <img src="/logo_osasco_express.png" alt="Logo" style={{ width: 90, marginBottom: 20 }} />
       <div style={{
-        background: "#fff", borderRadius: 20, padding: "40px 26px", boxShadow: "0 6px 36px #0002",
-        maxWidth: 420, width: "95%", margin: "0 auto", textAlign: "center"
+        background: "#1a1a1a", borderRadius: 20, padding: "34px 32px", boxShadow: "0 6px 36px #0005",
+        width: 360, maxWidth: "96%"
       }}>
-        <img src="https://i.imgur.com/lh2QhRs.png" alt="Logo" style={{ width: 72, marginBottom: 10 }} />
-        <h2 style={{ color: "#d86718", fontWeight: 900, marginBottom: 6 }}>Fila do Rodízio</h2>
-        <div style={{ color: "#999", marginBottom: 8, fontSize: 16 }}>Data: {hoje}</div>
-        <div style={{
-          color: "#222", fontSize: 18, fontWeight: "bold", marginBottom: 18,
-          background: "#ffe1cd", borderRadius: 7, padding: "8px 0"
-        }}>
-          Olá, {meuNome || "motoboy"}!
-          {estaNaFila
-            ? <span style={{ color: "#18b119", fontWeight: 700 }}> — você está na fila ✅</span>
-            : <span style={{ color: "#be1e1e", fontWeight: 700 }}> — você não está na fila ❌</span>
-          }
-        </div>
-        <ol style={{
-          fontSize: 20, textAlign: "left", margin: "0 auto", maxWidth: 290,
-          paddingLeft: 18
-        }}>
-          {queue.map((q, idx) => {
-            const m = motoboys[q.codigo];
-            return (
-              <li
-                key={idx}
-                style={{
-                  color: q.codigo === codigo ? "#d86718" : "#222",
-                  fontWeight: q.codigo === codigo ? "bold" : "normal",
-                  background: q.codigo === codigo ? "#fff3e8" : "none",
-                  borderRadius: 6,
-                  padding: q.codigo === codigo ? "6px 2px" : "2px 0"
-                }}
-              >
-                {m ? m.nome : q.codigo}
-                {q.codigo === codigo && " (você)"}
-              </li>
-            );
-          })}
-        </ol>
-        <button
-          style={{
-            marginTop: 22, background: "#fff", color: "#d86718", border: "2px solid #d86718",
-            borderRadius: 7, fontWeight: 700, padding: "13px 0", fontSize: 17, width: "100%",
-            boxShadow: "0 1px 8px #d8671806", cursor: "pointer"
-          }}
-          onClick={() => setAcesso(false)}
-        >Sair</button>
+        <h2 style={{ color: "#ffc300", textAlign: "center", fontWeight: 900, marginBottom: 22 }}>
+          Painel Motoboy
+        </h2>
+        {!motoboy && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <input
+              placeholder="Digite seu código"
+              value={codigo}
+              onChange={e => setCodigo(e.target.value.toUpperCase())}
+              style={{
+                padding: "15px 15px", borderRadius: 8, border: "1.5px solid #ffc300",
+                fontSize: 17, background: "#222", color: "#fff", textAlign: "center"
+              }}
+            />
+            <div style={{ color: "#fff", fontSize: 15, textAlign: "center" }}>
+              Informe seu código de acesso para entrar.
+            </div>
+          </div>
+        )}
+
+        {motoboy && (
+          <>
+            <div style={{
+              color: "#fff", textAlign: "center", fontSize: 18,
+              marginBottom: 13
+            }}>
+              <b style={{ color: "#ffc300" }}>{motoboy.nome}</b>
+              <br />
+              Código: <span style={{ color: "#ffc300" }}>{motoboy.codigo}</span>
+            </div>
+
+            {!estaNaFila ? (
+              <div style={{ textAlign: "center" }}>
+                <div style={{ color: "#fff", fontSize: 16, marginBottom: 10 }}>
+                  Você <b>não está</b> na fila de entregas.
+                </div>
+                <button
+                  onClick={handleCheguei}
+                  disabled={loading}
+                  style={{
+                    background: "#ffc300", color: "#000", border: "none",
+                    borderRadius: 8, fontWeight: 800, padding: "13px 28px",
+                    fontSize: 19, margin: "14px 0", cursor: "pointer"
+                  }}
+                >Cheguei!</button>
+              </div>
+            ) : (
+              <div style={{ textAlign: "center" }}>
+                <div style={{
+                  color: "#fff", fontSize: 16, marginBottom: 7
+                }}>
+                  Você está na fila.<br />
+                  <b style={{ color: "#ffc300", fontSize: 20 }}>
+                    Sua posição: {queue.findIndex(q => q.codigo === codigo) + 1}
+                  </b>
+                </div>
+                <button
+                  onClick={handleSaiu}
+                  disabled={loading}
+                  style={{
+                    background: "#fff", color: "#000", border: "none",
+                    borderRadius: 8, fontWeight: 800, padding: "13px 28px",
+                    fontSize: 19, margin: "14px 0", cursor: "pointer"
+                  }}
+                >Sair para entrega</button>
+              </div>
+            )}
+            {msg && <div style={{ color: "#ffc300", textAlign: "center", marginTop: 13 }}>{msg}</div>}
+          </>
+        )}
       </div>
     </div>
   );
 }
+

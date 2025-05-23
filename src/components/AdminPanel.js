@@ -1,21 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
 import { ref, set, onValue } from 'firebase/database';
-
-// Função para gerar código aleatório de 5 caracteres
-function gerarCodigo() {
-  const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let codigo = '';
-  for (let i = 0; i < 5; i++) {
-    codigo += letras[Math.floor(Math.random() * letras.length)];
-  }
-  return codigo;
-}
+import MotoboysManager from './MotoboysManager';
+import Relatorios from './Relatorios'; // novo componente de relatório
 
 export default function AdminPanel({ onLogout }) {
   const [queue, setQueue] = useState([]);
   const [motoboys, setMotoboys] = useState({});
-  const [name, setName] = useState('');
+  const [showMotoboysManager, setShowMotoboysManager] = useState(false);
+  const [showRelatorios, setShowRelatorios] = useState(false);
+
   const hoje = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: '2-digit',
@@ -28,33 +22,6 @@ export default function AdminPanel({ onLogout }) {
     onValue(ref(db, 'motoboys'), (snapshot) => setMotoboys(snapshot.val() || {}));
   }, []);
 
-  // Adicionar novo motoboy com código gerado
-  const addMotoboy = () => {
-    if (name.trim() === '') return;
-    // Gera um código único (confere se não existe já no Firebase)
-    let novoCodigo = '';
-    let tentativas = 0;
-    do {
-      novoCodigo = gerarCodigo();
-      tentativas++;
-    } while (motoboys[novoCodigo] && tentativas < 20);
-    set(ref(db, `motoboys/${novoCodigo}`), { nome: name, codigo: novoCodigo });
-    setName('');
-  };
-
-  // Adiciona motoboy na fila pelo código
-  const addMotoboyToQueue = (codigo) => {
-    if (!queue.find(q => q.codigo === codigo)) {
-      set(ref(db, 'queue'), [...queue, { codigo }]);
-    }
-  };
-
-  // Remove da fila
-  const removeMotoboyFromQueue = (idx) => {
-    const updated = queue.filter((_, i) => i !== idx);
-    set(ref(db, 'queue'), updated);
-  };
-
   // Mover para final
   const moveToEnd = (idx) => {
     const updated = [...queue];
@@ -63,8 +30,30 @@ export default function AdminPanel({ onLogout }) {
     set(ref(db, 'queue'), updated);
   };
 
+  // Remover da fila
+  const removeMotoboyFromQueue = (idx) => {
+    const updated = queue.filter((_, i) => i !== idx);
+    set(ref(db, 'queue'), updated);
+  };
+
   // Resetar fila
   const resetQueue = () => set(ref(db, 'queue'), []);
+
+  // Mover para o topo da fila (nova função)
+  const moveToTop = (idx) => {
+    const updated = [...queue];
+    const [motoboy] = updated.splice(idx, 1);
+    updated.unshift(motoboy);
+    set(ref(db, 'queue'), updated);
+  };
+
+  if (showMotoboysManager) {
+    return <MotoboysManager onBack={() => setShowMotoboysManager(false)} />;
+  }
+
+  if (showRelatorios) {
+    return <Relatorios onBack={() => setShowRelatorios(false)} />;
+  }
 
   return (
     <div style={{
@@ -77,55 +66,35 @@ export default function AdminPanel({ onLogout }) {
       }}>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 24, justifyContent: "space-between" }}>
           <img src="/logo_osasco_express.png" alt="Logo Osasco Express" style={{ width: 90, marginRight: 22 }} />
-          <button
-            style={{
-              background: "#fff", color: "#000", border: "2px solid #fff", borderRadius: 8,
-              fontWeight: 700, padding: "10px 20px", fontSize: 17, cursor: "pointer"
-            }}
-            onClick={onLogout}
-          >Sair</button>
+          <div>
+            <button
+              style={{
+                background: "#ffc300", color: "#000", border: "none", borderRadius: 8,
+                fontWeight: 700, padding: "10px 20px", fontSize: 17, marginLeft: 0, cursor: "pointer"
+              }}
+              onClick={() => setShowMotoboysManager(true)}
+            >Gerenciar Motoboys</button>
+            <button
+              style={{
+                background: "#222", color: "#ffc300", border: "2px solid #ffc300", borderRadius: 8,
+                fontWeight: 700, padding: "10px 20px", fontSize: 17, marginLeft: 18, cursor: "pointer"
+              }}
+              onClick={() => setShowRelatorios(true)}
+            >Relatórios</button>
+            <button
+              style={{
+                background: "#fff", color: "#000", border: "2px solid #fff", borderRadius: 8,
+                fontWeight: 700, padding: "10px 20px", fontSize: 17, marginLeft: 18, cursor: "pointer"
+              }}
+              onClick={onLogout}
+            >Sair</button>
+          </div>
         </div>
         <div style={{ color: "#bbb", fontSize: 17, marginBottom: 18 }}>
           <span style={{ color: "#fff", fontWeight: 700 }}>Painel Admin – Osasco Express</span><br />
           <span>Data: {hoje}</span>
         </div>
 
-        <div style={{ marginBottom: 24, display: "flex", gap: 10 }}>
-          <input
-            placeholder="Nome do motoboy"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            style={{
-              flex: 1, padding: "12px 10px", borderRadius: 7, border: "1.5px solid #fff", fontSize: 16,
-              background: "#222", color: "#fff"
-            }}
-          />
-          <button
-            onClick={addMotoboy}
-            style={{
-              background: "#fff", color: "#000", border: "none", borderRadius: 7,
-              fontWeight: 700, padding: "12px 18px", fontSize: 17, cursor: "pointer"
-            }}
-          >Cadastrar</button>
-        </div>
-
-        <h3 style={{ color: "#fff", margin: "18px 0 4px", fontSize: 20, fontWeight: 900 }}>Motoboys Cadastrados:</h3>
-        <ul style={{ margin: 0, paddingLeft: 18 }}>
-          {Object.values(motoboys).length === 0 && <li style={{ color: "#ffc300" }}>Nenhum motoboy cadastrado.</li>}
-          {Object.values(motoboys).map((m, i) => (
-            <li key={i} style={{ marginBottom: 6, color: "#fff" }}>
-              {m.nome} | <b style={{ color: "#ffc300" }}>{m.codigo}</b>
-              <button
-                onClick={() => addMotoboyToQueue(m.codigo)}
-                style={{
-                  marginLeft: 12, background: "#fff", color: "#000", border: "1.5px solid #fff",
-                  borderRadius: 7, fontWeight: 700, padding: "6px 13px", fontSize: 15, cursor: "pointer"
-                }}
-              >Adicionar à Fila</button>
-            </li>
-          ))}
-        </ul>
-        <hr style={{ margin: "28px 0 18px", borderColor: "#333" }} />
         <h2 style={{ color: "#ffc300", margin: "0 0 12px", fontWeight: 900 }}>Fila Atual</h2>
         <ol style={{ fontSize: 19, marginLeft: 8, marginBottom: 16 }}>
           {queue.length === 0 && <li style={{ color: "#ffc300" }}>Fila vazia.</li>}
@@ -136,16 +105,23 @@ export default function AdminPanel({ onLogout }) {
                 {m ? m.nome : q.codigo}
                 <span style={{ color: "#888", marginLeft: 7 }}>({q.codigo})</span>
                 <button
+                  onClick={() => moveToTop(idx)}
+                  style={{
+                    marginLeft: 8, background: "#ffc300", color: "#000", border: "none",
+                    borderRadius: 7, fontWeight: 700, padding: "5px 13px", fontSize: 15, cursor: "pointer"
+                  }}
+                >Mover para topo</button>
+                <button
                   onClick={() => moveToEnd(idx)}
                   style={{
-                    marginLeft: 12, background: "#ffc300", color: "#000", border: "none",
+                    marginLeft: 8, background: "#ffc300", color: "#000", border: "none",
                     borderRadius: 7, fontWeight: 700, padding: "5px 13px", fontSize: 15, cursor: "pointer"
                   }}
                 >Mover para final</button>
                 <button
                   onClick={() => removeMotoboyFromQueue(idx)}
                   style={{
-                    marginLeft: 6, background: "#fff", color: "#be1e1e", border: "1.5px solid #be1e1e",
+                    marginLeft: 8, background: "#fff", color: "#be1e1e", border: "1.5px solid #be1e1e",
                     borderRadius: 7, fontWeight: 700, padding: "5px 13px", fontSize: 15, cursor: "pointer"
                   }}
                 >Remover</button>

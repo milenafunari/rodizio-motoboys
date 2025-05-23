@@ -1,33 +1,38 @@
 import React, { useState } from 'react';
-import MotoboyPanel from './components/MotoboyPanel';
 import AdminPanel from './components/AdminPanel';
+import MotoboyPanel from './components/MotoboyPanel';
 
-const SENHA_ADMIN = "motoboy2024"; // <<< Defina sua senha aqui
+const SENHA_ADMIN = "motoboy2024"; // Altere aqui a senha de admin, se desejar
 
 function App() {
   const [painel, setPainel] = useState(null); // null, "motoboy", "admin"
   const [senhaDigitada, setSenhaDigitada] = useState('');
   const [erro, setErro] = useState('');
 
+  // Tela inicial
   if (!painel) {
     return (
       <div style={{
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        height: "100vh", fontFamily: "Nunito, Arial, sans-serif", background: "#faf6f4"
+        height: "100vh", fontFamily: "Nunito, Arial, sans-serif", background: "#000"
       }}>
-        <img src="https://i.imgur.com/lh2QhRs.png" alt="Logo Osasco" style={{ width: 90, marginBottom: 22 }} />
-        <h1 style={{ color: "#d86718", marginBottom: 40, fontWeight: 900, fontSize: 30 }}>Sistema de Rodízio de Motoboys</h1>
-        <button onClick={() => setPainel("motoboy")}
+        <img src="/logo_osasco_express.png" alt="Logo Osasco Express" style={{ width: 100, marginBottom: 30 }} />
+        <h1 style={{ color: "#ffc300", marginBottom: 50, fontWeight: 900, fontSize: 30, textAlign: "center" }}>
+          Sistema de Rodízio<br />Osasco Express
+        </h1>
+        <button
+          onClick={() => setPainel("motoboy")}
           style={{
-            background: "#fff", color: "#d86718", border: "2px solid #d86718", borderRadius: 8,
-            fontWeight: 700, padding: "16px 30px", fontSize: 18, marginBottom: 18, cursor: "pointer"
+            background: "#fff", color: "#000", border: "2px solid #fff", borderRadius: 10,
+            fontWeight: 800, padding: "18px 38px", fontSize: 20, marginBottom: 28, cursor: "pointer", width: 260
           }}>
           Acesso Motoboy
         </button>
-        <button onClick={() => setPainel("admin")}
+        <button
+          onClick={() => setPainel("admin")}
           style={{
-            background: "#d86718", color: "#fff", border: "none", borderRadius: 8,
-            fontWeight: 700, padding: "16px 30px", fontSize: 18, cursor: "pointer"
+            background: "#ffc300", color: "#000", border: "none", borderRadius: 10,
+            fontWeight: 800, padding: "18px 38px", fontSize: 20, width: 260, cursor: "pointer"
           }}>
           Acesso Admin
         </button>
@@ -35,22 +40,23 @@ function App() {
     );
   }
 
+  // Tela de senha do admin
   if (painel === "admin" && senhaDigitada !== SENHA_ADMIN) {
     return (
       <div style={{
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        height: "100vh", fontFamily: "Nunito, Arial, sans-serif", background: "#faf6f4"
+        height: "100vh", fontFamily: "Nunito, Arial, sans-serif", background: "#000"
       }}>
-        <img src="https://i.imgur.com/lh2QhRs.png" alt="Logo Osasco" style={{ width: 90, marginBottom: 18 }} />
-        <h2 style={{ color: "#d86718", marginBottom: 20, fontWeight: 900 }}>Acesso Restrito</h2>
+        <img src="/logo_osasco_express.png" alt="Logo Osasco Express" style={{ width: 90, marginBottom: 24 }} />
+        <h2 style={{ color: "#ffc300", marginBottom: 22, fontWeight: 900 }}>Acesso Restrito – Admin</h2>
         <input
           type="password"
           placeholder="Digite a senha do admin"
           value={senhaDigitada}
           onChange={e => { setSenhaDigitada(e.target.value); setErro(''); }}
           style={{
-            padding: "14px 18px", fontSize: 18, borderRadius: 8, border: "1.5px solid #d86718",
-            outline: "none", marginBottom: 16, width: 220, textAlign: "center"
+            padding: "16px 20px", fontSize: 19, borderRadius: 8, border: "1.5px solid #ffc300",
+            outline: "none", marginBottom: 18, width: 240, textAlign: "center", background: "#222", color: "#fff"
           }}
         />
         <button
@@ -62,24 +68,28 @@ function App() {
             }
           }}
           style={{
-            background: "#d86718", color: "#fff", border: "none", borderRadius: 8,
-            fontWeight: 700, padding: "12px 28px", fontSize: 17, cursor: "pointer"
+            background: "#ffc300", color: "#000", border: "none", borderRadius: 8,
+            fontWeight: 700, padding: "14px 32px", fontSize: 18, cursor: "pointer"
           }}
         >Entrar</button>
-        {erro && <div style={{ color: "#be1e1e", marginTop: 12 }}>{erro}</div>}
+        {erro && <div style={{ color: "#be1e1e", marginTop: 15 }}>{erro}</div>}
         <button
           onClick={() => { setPainel(null); setSenhaDigitada(''); setErro(''); }}
           style={{
-            background: "#fff", color: "#d86718", border: "2px solid #d86718", borderRadius: 8,
-            fontWeight: 700, padding: "8px 24px", fontSize: 15, cursor: "pointer", marginTop: 18
+            background: "#fff", color: "#000", border: "2px solid #ffc300", borderRadius: 8,
+            fontWeight: 700, padding: "10px 28px", fontSize: 16, cursor: "pointer", marginTop: 24
           }}
         >Voltar</button>
       </div>
     );
   }
 
+  // Painel Motoboy (apenas código)
   if (painel === "motoboy") return <MotoboyPanel />;
-  if (painel === "admin" && senhaDigitada === SENHA_ADMIN) return <AdminPanel onLogout={() => { setPainel(null); setSenhaDigitada(''); }} />;
+
+  // Painel Admin (proteção por senha)
+  if (painel === "admin" && senhaDigitada === SENHA_ADMIN)
+    return <AdminPanel onLogout={() => { setPainel(null); setSenhaDigitada(''); setErro(''); }} />;
 
   return null;
 }
